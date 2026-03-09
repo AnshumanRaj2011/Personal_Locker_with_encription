@@ -1,30 +1,53 @@
-function searchProfile(){
+const firebaseConfig = {
+  apiKey: "AIzaSyCE7RsYIyLZB_JDkzZapB-XgYzixfFFh9E",
+  authDomain: "instagram-viewer-d1b90.firebaseapp.com",
+  databaseURL: "https://instagram-viewer-d1b90-default-rtdb.firebaseio.com",
+  projectId: "instagram-viewer-d1b90",
+  storageBucket: "instagram-viewer-d1b90.firebasestorage.app",
+  messagingSenderId: "558751573053",
+  appId: "1:558751573053:web:03ecc66967414f2a0db654",
+  measurementId: "G-F75CHB90YR"
+};
 
-let username = document.getElementById("username").value
+firebase.initializeApp(firebaseConfig);
 
-document.getElementById("profile").innerHTML =
-"Viewing profile: " + username
+const db = firebase.database();
 
-}
+const reelsContainer = document.querySelector(".reelsContainer");
 
+db.ref("reels").on("value", (snapshot) => {
 
+reelsContainer.innerHTML = "";
 
-let likes = document.querySelectorAll(".like")
+snapshot.forEach((child) => {
 
-likes.forEach(button => {
+let reel = child.val();
 
-button.addEventListener("click", () => {
+let html = `
+<div class="reel">
 
-if(button.innerHTML === "❤️"){
+<video autoplay loop muted>
+<source src="${reel.video}">
+</video>
 
-button.innerHTML = "💔"
+<div class="overlay">
 
-}else{
+<div class="info">
+<h3>@${reel.username}</h3>
+<p>${reel.caption}</p>
+</div>
 
-button.innerHTML = "❤️"
+<div class="actions">
+<button class="like">❤️</button>
+</div>
 
-}
+</div>
 
-})
+</div>
+`;
 
-})
+reelsContainer.innerHTML += html;
+
+});
+
+});
