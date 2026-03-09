@@ -4,98 +4,113 @@ margin:0;
 
 font-family:Arial;
 
-background:#0f0f0f;
+background:black;
 
 color:white;
 
-text-align:center;
+overflow-y:scroll;
+
+scroll-snap-type:y mandatory;
 
 }
-
 
 
 header{
 
+position:fixed;
+
+top:0;
+
+width:100%;
+
 background:black;
 
-padding:18px;
+padding:15px;
 
-font-size:22px;
+font-size:20px;
 
-font-weight:bold;
+text-align:center;
+
+z-index:10;
 
 }
-
 
 
 .searchBox{
 
-padding:20px;
+position:fixed;
+
+top:60px;
+
+width:100%;
+
+text-align:center;
+
+z-index:10;
 
 }
-
 
 
 input{
 
-padding:12px;
+padding:10px;
 
 width:60%;
 
-border:none;
-
 border-radius:6px;
 
-}
+border:none;
 
+}
 
 
 button{
 
-padding:12px;
+padding:10px;
 
 background:#ff3040;
 
-color:white;
-
 border:none;
+
+color:white;
 
 border-radius:6px;
 
-margin-left:10px;
+}
+
+
+.reelsContainer{
+
+margin-top:120px;
 
 }
 
 
+.reel{
 
-#profile{
+height:100vh;
 
-margin-top:20px;
+scroll-snap-align:start;
 
-font-size:20px;
+display:flex;
 
-}
+align-items:center;
 
-
-
-#reels{
-
-margin-top:30px;
+justify-content:center;
 
 }
-
 
 
 video{
 
-width:95%;
+width:100%;
 
-max-width:450px;
+max-width:500px;
+
+height:100%;
+
+object-fit:cover;
 
 border-radius:10px;
-
-margin:20px auto;
-
-display:block;
 
 }
