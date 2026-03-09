@@ -14,7 +14,6 @@ scroll-snap-type:y mandatory;
 
 }
 
-
 header{
 
 position:fixed;
@@ -27,14 +26,11 @@ background:black;
 
 padding:15px;
 
-font-size:20px;
-
 text-align:center;
 
 z-index:10;
 
 }
-
 
 .searchBox{
 
@@ -50,7 +46,6 @@ z-index:10;
 
 }
 
-
 input{
 
 padding:10px;
@@ -63,21 +58,19 @@ border:none;
 
 }
 
-
 button{
 
 padding:10px;
 
-background:#ff3040;
-
 border:none;
-
-color:white;
 
 border-radius:6px;
 
-}
+background:#ff3040;
 
+color:white;
+
+}
 
 .reelsContainer{
 
@@ -85,12 +78,13 @@ margin-top:120px;
 
 }
 
-
 .reel{
 
 height:100vh;
 
 scroll-snap-align:start;
+
+position:relative;
 
 display:flex;
 
@@ -100,17 +94,78 @@ justify-content:center;
 
 }
 
-
 video{
 
 width:100%;
-
-max-width:500px;
 
 height:100%;
 
 object-fit:cover;
 
-border-radius:10px;
+}
+
+.overlay{
+
+position:absolute;
+
+bottom:80px;
+
+left:15px;
+
+right:15px;
+
+display:flex;
+
+justify-content:space-between;
+
+align-items:flex-end;
+
+}
+
+.info{
+
+max-width:70%;
+
+}
+
+.actions{
+
+font-size:28px;
+
+}
+
+.like{
+
+background:none;
+
+font-size:28px;
+
+}
+
+.bottomNav{
+
+position:fixed;
+
+bottom:0;
+
+width:100%;
+
+background:black;
+
+display:flex;
+
+justify-content:space-around;
+
+padding:12px 0;
+
+}
+
+.bottomNav a{
+
+color:white;
+
+text-decoration:none;
+
+font-size:16px;
 
 }
