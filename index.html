@@ -2,64 +2,34 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Fingerprint Vault</title>
+<title>Secure Vault</title>
 
 <style>
-
-body{
-font-family:Arial;
-background:#0f172a;
-color:white;
-text-align:center;
-padding:30px;
-}
-
-button{
-padding:10px 20px;
-margin:10px;
-border:none;
-border-radius:8px;
-background:#22c55e;
-color:white;
-font-size:16px;
-}
-
-textarea{
-width:90%;
-height:150px;
-padding:10px;
-margin-top:20px;
-border-radius:10px;
-border:none;
-display:none;
-}
-
-.note{
-background:#1e293b;
-padding:10px;
-margin:10px;
-border-radius:10px;
-cursor:pointer;
-}
-
+body{font-family:Arial;background:#0f172a;color:white;text-align:center;padding:25px}
+button{padding:10px 18px;margin:8px;border:none;border-radius:8px;background:#22c55e;color:white}
+textarea{width:90%;height:140px;padding:10px;border-radius:8px;border:none;display:none}
+.note{background:#1e293b;margin:8px;padding:10px;border-radius:8px;cursor:pointer}
+input{padding:8px;width:80%;margin:10px;border-radius:6px;border:none}
 </style>
 
 </head>
 
 <body>
 
-<h2>🔐 Fingerprint Vault</h2>
+<h2>Secure Vault</h2>
 
-<button onclick="unlockVault()">Unlock</button>
-<button onclick="makeNew()">Make New</button>
+<button onclick="unlock()">Unlock</button>
+<button onclick="newNote()">Make New</button>
 
 <br>
 
-<textarea id="editor"></textarea>
+<input id="search" placeholder="Search notes" oninput="searchNotes()" style="display:none">
 
+<textarea id="editor"></textarea>
 <br>
 
 <button id="saveBtn" onclick="saveNote()" style="display:none">Save</button>
+<button id="deleteBtn" onclick="deleteNote()" style="display:none;background:#ef4444">Delete</button>
 
 <div id="notes"></div>
 
@@ -68,189 +38,227 @@ cursor:pointer;
 
 <script>
 
-const firebaseConfig = {
-apiKey: "AIzaSyCE7RsYIyLZB_JDkzZapB-XgYzixfFFh9E",
-authDomain: "instagram-viewer-d1b90.firebaseapp.com",
-databaseURL: "https://instagram-viewer-d1b90-default-rtdb.firebaseio.com",
-projectId: "instagram-viewer-d1b90",
-storageBucket: "instagram-viewer-d1b90.firebasestorage.app",
-messagingSenderId: "558751573053",
-appId: "1:558751573053:web:03ecc66967414f2a0db654",
-measurementId: "G-F75CHB90YR"
+const firebaseConfig={
+apiKey:"AIzaSyCE7RsYIyLZB_JDkzZapB-XgYzixfFFh9E",
+authDomain:"instagram-viewer-d1b90.firebaseapp.com",
+databaseURL:"https://instagram-viewer-d1b90-default-rtdb.firebaseio.com",
+projectId:"instagram-viewer-d1b90"
 };
 
 firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
+
+const db=firebase.database();
 
 let cryptoKey;
-let editID = null;
+let editID=null;
+let vaultData={};
+let lockTimer;
 
-async function fingerprint(){
-try{
-
-// simple biometric prompt simulation
-const result = confirm("Authenticate with fingerprint to continue");
-
-if(result){
-return true;
-}else{
-return false;
-}
-
-}catch{
-alert("Authentication failed");
-return false;
-}
+async function auth(){
+return confirm("Authenticate to continue")
 }
 
 async function getKey(){
 
-let stored = localStorage.getItem("vaultKey");
+let stored=localStorage.getItem("vaultKey")
 
 if(stored){
 
-const raw = Uint8Array.from(atob(stored), c => c.charCodeAt(0));
+const raw=Uint8Array.from(atob(stored),c=>c.charCodeAt(0))
 
-return await crypto.subtle.importKey(
-"raw",
-raw,
-{name:"AES-GCM"},
-true,
-["encrypt","decrypt"]
-);
+return crypto.subtle.importKey("raw",raw,{name:"AES-GCM"},true,["encrypt","decrypt"])
 
 }
 
-const key = await crypto.subtle.generateKey(
-{name:"AES-GCM",length:256},
-true,
-["encrypt","decrypt"]
-);
+const key=await crypto.subtle.generateKey({name:"AES-GCM",length:256},true,["encrypt","decrypt"])
 
-const exported = await crypto.subtle.exportKey("raw",key);
+const exported=await crypto.subtle.exportKey("raw",key)
 
-const b64 = btoa(String.fromCharCode(...new Uint8Array(exported)));
+localStorage.setItem("vaultKey",btoa(String.fromCharCode(...new Uint8Array(exported))))
 
-localStorage.setItem("vaultKey",b64);
-
-return key;
+return key
 
 }
 
 async function encrypt(text){
 
-const iv = crypto.getRandomValues(new Uint8Array(12));
+const iv=crypto.getRandomValues(new Uint8Array(12))
 
-const encoded = new TextEncoder().encode(text);
+const enc=new TextEncoder().encode(text)
 
-const cipher = await crypto.subtle.encrypt(
-{name:"AES-GCM",iv},
-cryptoKey,
-encoded
-);
+const cipher=await crypto.subtle.encrypt({name:"AES-GCM",iv},cryptoKey,enc)
 
-return{
-data:Array.from(new Uint8Array(cipher)),
-iv:Array.from(iv)
-};
+return{data:Array.from(new Uint8Array(cipher)),iv:Array.from(iv)}
 
 }
 
 async function decrypt(data,iv){
 
-const decrypted = await crypto.subtle.decrypt(
-{name:"AES-GCM",iv:new Uint8Array(iv)},
-cryptoKey,
-new Uint8Array(data)
-);
+try{
 
-return new TextDecoder().decode(decrypted);
+const dec=await crypto.subtle.decrypt({name:"AES-GCM",iv:new Uint8Array(iv)},cryptoKey,new Uint8Array(data))
 
-}
+return new TextDecoder().decode(dec)
 
-function makeNew(){
+}catch{
 
-document.getElementById("editor").style.display="block";
-document.getElementById("saveBtn").style.display="inline";
-
-document.getElementById("editor").value="";
-
-editID = null;
+return "[Cannot decrypt]"
 
 }
 
-async function unlockVault(){
+}
 
-if(!await fingerprint()) return;
+async function unlock(){
 
-cryptoKey = await getKey();
+if(!await auth()) return
 
-loadNotes();
+cryptoKey=await getKey()
+
+document.getElementById("search").style.display="inline"
+
+loadNotes()
+
+resetTimer()
+
+}
+
+function resetTimer(){
+
+clearTimeout(lockTimer)
+
+lockTimer=setTimeout(function(){
+
+alert("Vault locked")
+
+location.reload()
+
+},30000)
+
+}
+
+function newNote(){
+
+document.getElementById("editor").style.display="block"
+
+document.getElementById("saveBtn").style.display="inline"
+
+document.getElementById("deleteBtn").style.display="none"
+
+document.getElementById("editor").value=""
+
+editID=null
+
+resetTimer()
 
 }
 
 function loadNotes(){
 
-db.ref("vault").once("value",async snap=>{
+db.ref("vault").once("value",async function(snap){
 
-const container = document.getElementById("notes");
+const box=document.getElementById("notes")
 
-container.innerHTML="";
+box.innerHTML=""
 
-snap.forEach(async item=>{
+vaultData={}
 
-const val = item.val();
+snap.forEach(async function(item){
 
-const text = await decrypt(val.data,val.iv);
+const val=item.val()
 
-const div = document.createElement("div");
+const text=await decrypt(val.data,val.iv)
 
-div.className="note";
+vaultData[item.key]=text
 
-div.innerText = text;
+showNote(item.key,text)
+
+})
+
+})
+
+}
+
+function showNote(id,text){
+
+const div=document.createElement("div")
+
+div.className="note"
+
+div.innerText=text
 
 div.onclick=function(){
 
-document.getElementById("editor").style.display="block";
-document.getElementById("saveBtn").style.display="inline";
+document.getElementById("editor").style.display="block"
 
-document.getElementById("editor").value=text;
+document.getElementById("saveBtn").style.display="inline"
 
-editID=item.key;
+document.getElementById("deleteBtn").style.display="inline"
 
-};
+document.getElementById("editor").value=text
 
-container.appendChild(div);
+editID=id
 
-});
+resetTimer()
 
-});
+}
+
+document.getElementById("notes").appendChild(div)
 
 }
 
 async function saveNote(){
 
-if(!await fingerprint()) return;
+if(!await auth()) return
 
-const text=document.getElementById("editor").value;
+const text=document.getElementById("editor").value
 
-const encrypted=await encrypt(text);
+const enc=await encrypt(text)
 
-if(editID){
+const id=editID || Math.random().toString(36).substring(2)
 
-db.ref("vault/"+editID).set(encrypted);
+db.ref("vault/"+id).set(enc)
 
-}else{
+document.getElementById("editor").style.display="none"
 
-const id=Math.random().toString(36).substring(2);
+loadNotes()
 
-db.ref("vault/"+id).set(encrypted);
+resetTimer()
 
 }
 
-document.getElementById("editor").value="";
+function deleteNote(){
 
-loadNotes();
+if(!editID) return
+
+if(confirm("Delete this note?")){
+
+db.ref("vault/"+editID).remove()
+
+document.getElementById("editor").style.display="none"
+
+loadNotes()
+
+}
+
+}
+
+function searchNotes(){
+
+const q=document.getElementById("search").value.toLowerCase()
+
+const box=document.getElementById("notes")
+
+box.innerHTML=""
+
+for(let id in vaultData){
+
+if(vaultData[id].toLowerCase().includes(q)){
+
+showNote(id,vaultData[id])
+
+}
+
+}
 
 }
 
